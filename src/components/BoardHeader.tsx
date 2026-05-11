@@ -5,7 +5,15 @@ import { useEffect, useState } from "react";
 import ShareModal from "./ShareModal";
 import UserProfilePopover from "./UserProfilePopover";
 
-export default function BoardHeader({ roomId }: { roomId: string }) {
+export default function BoardHeader({
+  roomId,
+  aiOpen,
+  onToggleAi,
+}: {
+  roomId: string;
+  aiOpen: boolean;
+  onToggleAi: () => void;
+}) {
   const [shareOpen, setShareOpen] = useState(false);
   const [url, setUrl] = useState("");
 
@@ -15,27 +23,39 @@ export default function BoardHeader({ roomId }: { roomId: string }) {
 
   return (
     <>
-      <div className="pointer-events-none absolute left-4 top-4 z-30 flex items-center gap-2">
-        <Link
-          href="/"
-          className="wobble-border pointer-events-auto bg-paper px-3 py-1 font-[family-name:var(--font-display)] text-xl"
-        >
-          ← brainboard
-        </Link>
-        <button
-          onClick={() => setShareOpen(true)}
-          className="wobble-border pointer-events-auto bg-sun px-3 py-1 font-[family-name:var(--font-hand)] text-base"
-          title="Open share dialog"
-        >
-          🔗 invite · {roomId}
-        </button>
-      </div>
+      <header className="board-header">
+        <div className="flex items-center gap-2 min-w-0">
+          <Link
+            href="/"
+            className="wobble-border bg-paper px-3 py-1 font-[family-name:var(--font-display)] text-xl shrink-0"
+          >
+            ← brainboard
+          </Link>
+          <button
+            onClick={() => setShareOpen(true)}
+            className="wobble-border bg-sun px-3 py-1 font-[family-name:var(--font-hand)] text-base shrink-0"
+            title="Open share dialog"
+          >
+            🔗 invite · {roomId}
+          </button>
+        </div>
 
-      <div className="pointer-events-none absolute right-4 bottom-4 z-30">
-        <div className="pointer-events-auto">
+        <div className="flex items-center gap-2">
+          <button
+            onClick={onToggleAi}
+            className={`wobble-border px-4 py-1 font-[family-name:var(--font-display)] text-xl ${
+              aiOpen ? "bg-ink text-paper" : "bg-grape text-paper"
+            }`}
+            title={aiOpen ? "Hide AI panel (Ctrl+K)" : "Show AI panel (Ctrl+K)"}
+          >
+            ✦ ai{" "}
+            <kbd className="ml-1 rounded border border-paper/40 px-1 font-mono text-[10px]">
+              ⌃K
+            </kbd>
+          </button>
           <UserProfilePopover />
         </div>
-      </div>
+      </header>
 
       <ShareModal
         open={shareOpen}

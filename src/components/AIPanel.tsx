@@ -9,18 +9,14 @@ type Tab = "sketch" | "diagram" | "summary";
 
 export default function AIPanel({
   editor,
-  open,
-  onOpenChange,
+  onClose,
 }: {
   editor: Editor;
-  open: boolean;
-  onOpenChange: (open: boolean) => void;
+  onClose: () => void;
 }) {
   const [tab, setTab] = useState<Tab>("sketch");
 
-  // 1/2/3 to switch tabs while panel is open (and user isn't typing)
   useEffect(() => {
-    if (!open) return;
     function onKey(e: KeyboardEvent) {
       const target = e.target as HTMLElement | null;
       if (
@@ -37,56 +33,42 @@ export default function AIPanel({
     }
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
-  }, [open]);
+  }, []);
 
   return (
-    <>
-      {!open && (
+    <aside className="absolute right-4 top-4 z-30 flex w-[380px] max-w-[calc(100vw-2rem)] flex-col gap-3 rounded-[18px] border-2 border-ink bg-paper p-4 shadow-[6px_6px_0_0_rgba(0,0,0,0.9)]">
+      <header className="flex items-center justify-between">
+        <h2 className="font-[family-name:var(--font-display)] text-3xl">
+          ✦ ai tools
+        </h2>
         <button
-          onClick={() => onOpenChange(true)}
-          className="wobble-border absolute right-4 top-4 z-30 bg-grape px-4 py-2 font-[family-name:var(--font-display)] text-2xl text-paper"
-          title="Open AI panel (Ctrl+K)"
+          onClick={onClose}
+          className="rounded-md px-2 py-1 font-[family-name:var(--font-hand)] text-lg hover:bg-ink/5"
+          aria-label="Close panel"
+          title="Close (Ctrl+K)"
         >
-          ✦ ai <kbd className="ml-2 rounded border border-paper/40 px-1 font-mono text-xs">⌃K</kbd>
+          ✕
         </button>
-      )}
+      </header>
 
-      {open && (
-        <aside className="absolute right-4 top-4 z-30 flex w-[380px] max-w-[calc(100vw-2rem)] flex-col gap-3 rounded-[18px] border-2 border-ink bg-paper p-4 shadow-[6px_6px_0_0_rgba(0,0,0,0.9)]">
-          <header className="flex items-center justify-between">
-            <h2 className="font-[family-name:var(--font-display)] text-3xl">
-              ✦ ai tools
-            </h2>
-            <button
-              onClick={() => onOpenChange(false)}
-              className="rounded-md px-2 py-1 font-[family-name:var(--font-hand)] text-lg hover:bg-ink/5"
-              aria-label="Close panel"
-              title="Close (Ctrl+K)"
-            >
-              ✕
-            </button>
-          </header>
+      <nav className="grid grid-cols-3 gap-1 rounded-xl bg-cream p-1">
+        <TabButton active={tab === "sketch"} onClick={() => setTab("sketch")} shortcut="1">
+          ✏️ Code
+        </TabButton>
+        <TabButton active={tab === "diagram"} onClick={() => setTab("diagram")} shortcut="2">
+          📐 Diagram
+        </TabButton>
+        <TabButton active={tab === "summary"} onClick={() => setTab("summary")} shortcut="3">
+          📝 Notes
+        </TabButton>
+      </nav>
 
-          <nav className="grid grid-cols-3 gap-1 rounded-xl bg-cream p-1">
-            <TabButton active={tab === "sketch"} onClick={() => setTab("sketch")} shortcut="1">
-              ✏️ Code
-            </TabButton>
-            <TabButton active={tab === "diagram"} onClick={() => setTab("diagram")} shortcut="2">
-              📐 Diagram
-            </TabButton>
-            <TabButton active={tab === "summary"} onClick={() => setTab("summary")} shortcut="3">
-              📝 Notes
-            </TabButton>
-          </nav>
-
-          <div className="min-h-[280px]">
-            {tab === "sketch" && <SketchToCode editor={editor} />}
-            {tab === "diagram" && <TextToDiagram editor={editor} />}
-            {tab === "summary" && <BoardSummary editor={editor} />}
-          </div>
-        </aside>
-      )}
-    </>
+      <div className="min-h-[280px]">
+        {tab === "sketch" && <SketchToCode editor={editor} />}
+        {tab === "diagram" && <TextToDiagram editor={editor} />}
+        {tab === "summary" && <BoardSummary editor={editor} />}
+      </div>
+    </aside>
   );
 }
 

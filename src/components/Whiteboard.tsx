@@ -22,7 +22,7 @@ const TEMPLATE_IDS: ReadonlySet<TemplateId> = new Set([
 export default function Whiteboard({ roomId }: { roomId: string }) {
   const store = useSyncDemo({ roomId: `brainboard-${roomId}` });
   const [editor, setEditor] = useState<Editor | null>(null);
-  const [aiOpen, setAiOpen] = useState(true);
+  const [aiOpen, setAiOpen] = useState(false);
   const seededRef = useRef(false);
   const params = useSearchParams();
   const templateParam = params.get("template");
@@ -31,7 +31,6 @@ export default function Whiteboard({ roomId }: { roomId: string }) {
       ? (templateParam as TemplateId)
       : "blank";
 
-  // Record visit + seed template once when editor + store ready
   useEffect(() => {
     if (!editor) return;
     if (store.status !== "synced-remote") return;
@@ -45,17 +44,14 @@ export default function Whiteboard({ roomId }: { roomId: string }) {
       const seed = templateSeed(template);
       if (seed.length > 0) {
         drawShapes(editor, seed, { origin: "center", focus: false });
-        // Zoom to fit instead of selecting
         editor.zoomToFit({ animation: { duration: 400 } });
       }
     }
   }, [editor, store, roomId, template]);
 
-  // Ctrl+K toggles AI panel
   useEffect(() => {
     function onKey(e: KeyboardEvent) {
       if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "k") {
-        // Skip if user is typing in an input/textarea
         const target = e.target as HTMLElement | null;
         if (
           target &&
@@ -74,17 +70,18 @@ export default function Whiteboard({ roomId }: { roomId: string }) {
   }, []);
 
   return (
-    <div className="tldraw-host">
-      <Tldraw store={store} onMount={(e) => setEditor(e)} />
-
-      <BoardHeader roomId={roomId} />
-      {editor && (
-        <AIPanel
-          editor={editor}
-          open={aiOpen}
-          onOpenChange={setAiOpen}
-        />
-      )}
+    <div className="board-shell">
+      <BoardHeader
+        roomId={roomId}
+        aiOpen={aiOpen}
+        onToggleAi={() => setAiOpen((v) => !v)}
+      />
+      <div className="board-canvas">
+        <Tldraw store={store} onMount={(e) => setEditor(e)} />
+        {editor && aiOpen && (
+          <AIPanel editor={editor} onClose={() => setAiOpen(false)} />
+        )}
+      </div>
     </div>
   );
 }

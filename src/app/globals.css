@@ -71,16 +71,36 @@ body {
   animation: float-y 4s ease-in-out infinite;
 }
 
-/* tldraw container fills the viewport regardless of parent layout */
-.tldraw-host {
-  position: fixed;
+/* Board layout: top bar + canvas area, no overlap with tldraw's corners */
+.board-shell {
+  position: absolute;
   inset: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.board-header {
+  flex: none;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 10px 14px;
+  background: var(--color-paper);
+  border-bottom: 2px solid var(--color-ink);
+  flex-wrap: wrap;
+  z-index: 40;
+}
+
+.board-canvas {
+  position: relative;
+  flex: 1 1 0;
+  min-height: 0;
 }
 
 /* Restore tldraw UI styling that Tailwind v4's preflight strips.
    Tailwind resets `button { background: transparent; color: inherit }` which
-   makes tldraw's toolbar buttons invisible against the canvas. Re-enable
-   tldraw's own styling within its container. */
+   can make tldraw's toolbar buttons invisible. Re-enable tldraw's styling. */
 .tl-container button,
 .tl-container [role="button"] {
   background: revert;
