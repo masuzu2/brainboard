@@ -71,16 +71,18 @@ body {
   animation: float-y 4s ease-in-out infinite;
 }
 
-/* Board layout: top bar + canvas area, no overlap with tldraw's corners */
+/* Board layout: top bar + canvas area, no overlap with tldraw's corners.
+   .board-shell pins to its relative parent and stacks header + canvas. */
 .board-shell {
   position: absolute;
   inset: 0;
   display: flex;
   flex-direction: column;
+  background: var(--color-paper);
 }
 
 .board-header {
-  flex: none;
+  flex: 0 0 auto;
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -94,26 +96,15 @@ body {
 
 .board-canvas {
   position: relative;
-  flex: 1 1 0;
+  flex: 1 1 auto;
   min-height: 0;
+  overflow: hidden;
+  /* Force the canvas to be a stable size so tldraw's ResizeObserver
+     doesn't fight with flex calculations after interactions. */
+  width: 100%;
 }
 
-/* Restore tldraw UI styling that Tailwind v4's preflight strips.
-   Tailwind resets `button { background: transparent; color: inherit }` which
-   can make tldraw's toolbar buttons invisible. Re-enable tldraw's styling. */
-.tl-container button,
-.tl-container [role="button"] {
-  background: revert;
-  color: revert;
-  font: revert;
-  border: revert;
-  cursor: pointer;
-}
-.tl-container input,
-.tl-container textarea,
-.tl-container select {
-  background: revert;
-  color: revert;
-  font: revert;
-  border: revert;
-}
+/* Tldraw v5 CSS is unlayered — it already beats Tailwind's @layer base
+   preflight in cascade order. Adding .tl-container * overrides here would
+   raise specificity above tldraw's own .tlui-* classes and break its
+   internal styling. So we deliberately add NOTHING here for .tl-container. */
