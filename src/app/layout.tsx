@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Caveat, Patrick_Hand, Inter } from "next/font/google";
 import "./globals.css";
 import "tldraw/tldraw.css";
+import { ToastProvider } from "@/components/Toast";
 
 const caveat = Caveat({
   variable: "--font-caveat",
@@ -43,7 +44,7 @@ export default function RootLayout({
       className={`${caveat.variable} ${patrickHand.variable} ${inter.variable} h-full antialiased`}
     >
       <body className="min-h-full flex flex-col bg-cream text-ink">
-        {children}
+        <ToastProvider>{children}</ToastProvider>
       </body>
     </html>
   );

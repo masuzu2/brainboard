@@ -1,24 +1,31 @@
-import Link from "next/link";
-import CreateBoardButton from "@/components/CreateBoardButton";
+import JoinRoomInput from "@/components/JoinRoomInput";
+import RecentBoards from "@/components/RecentBoards";
+import TemplatePicker from "@/components/TemplatePicker";
+import UserProfilePopover from "@/components/UserProfilePopover";
 
 export default function Home() {
   return (
-    <main className="paper-grid relative flex flex-1 flex-col items-center justify-center overflow-hidden px-6 py-16">
+    <main className="paper-grid relative flex flex-1 flex-col items-center justify-start overflow-hidden px-6 py-10">
+      {/* top bar */}
+      <div className="relative z-10 flex w-full max-w-5xl justify-end">
+        <UserProfilePopover />
+      </div>
+
       {/* floating doodles */}
-      <Doodle className="left-[6%] top-[12%]" rot={-12}>
+      <Doodle className="left-[6%] top-[18%]" rot={-12}>
         <PencilDoodle />
       </Doodle>
-      <Doodle className="right-[8%] top-[18%]" rot={14}>
+      <Doodle className="right-[8%] top-[22%]" rot={14}>
         <BulbDoodle />
       </Doodle>
-      <Doodle className="left-[10%] bottom-[14%]" rot={6}>
+      <Doodle className="left-[10%] bottom-[18%]" rot={6}>
         <ArrowDoodle />
       </Doodle>
-      <Doodle className="right-[12%] bottom-[18%]" rot={-8}>
+      <Doodle className="right-[12%] bottom-[22%]" rot={-8}>
         <StarDoodle />
       </Doodle>
 
-      <div className="relative z-10 flex max-w-3xl flex-col items-center text-center">
+      <div className="relative z-10 mt-12 flex max-w-3xl flex-col items-center text-center">
         <span className="mb-4 inline-flex items-center gap-2 rounded-full border-2 border-ink bg-sun px-4 py-1 font-[family-name:var(--font-hand)] text-sm">
           <span className="size-2 animate-pulse rounded-full bg-coral" />
           Live · multiplayer · AI-powered
@@ -39,23 +46,27 @@ export default function Home() {
           board into meeting notes.
         </p>
 
-        <div className="mt-10 flex flex-col items-center gap-4 sm:flex-row">
-          <CreateBoardButton />
-          <Link
-            href="#features"
-            className="font-[family-name:var(--font-hand)] text-lg underline decoration-wavy decoration-coral underline-offset-4 hover:text-coral"
-          >
-            see what it can do ↓
-          </Link>
+        <div className="mt-8 flex flex-col items-center gap-3">
+          <TemplatePicker />
+          <div className="flex items-center gap-2 text-ink-soft">
+            <span className="h-px w-12 bg-ink/20" />
+            <span className="font-[family-name:var(--font-hand)] text-sm">
+              or join an existing one
+            </span>
+            <span className="h-px w-12 bg-ink/20" />
+          </div>
+          <JoinRoomInput />
         </div>
       </div>
 
+      <RecentBoards />
+
       <section
         id="features"
-        className="relative z-10 mt-32 grid w-full max-w-5xl gap-6 sm:grid-cols-3"
+        className="relative z-10 mt-16 grid w-full max-w-5xl gap-6 sm:grid-cols-3"
       >
         <FeatureCard color="bg-coral/30" emoji="✏️" title="Sketch → Code">
-          Draw a UI mockup, hit one button, and Claude returns clean React +
+          Draw a UI mockup, hit one button, and AI returns clean React +
           Tailwind you can paste into your project.
         </FeatureCard>
         <FeatureCard color="bg-sky/30" emoji="📐" title="Text → Diagram">
@@ -71,7 +82,7 @@ export default function Home() {
         </FeatureCard>
       </section>
 
-      <footer className="relative z-10 mt-24 flex items-center gap-3 font-[family-name:var(--font-hand)] text-sm text-ink-soft">
+      <footer className="relative z-10 mt-12 mb-4 flex items-center gap-3 font-[family-name:var(--font-hand)] text-sm text-ink-soft">
         <span>built with</span>
         <span className="rounded-md border border-ink/30 bg-paper px-2 py-0.5">
           Next.js 16
@@ -80,7 +91,7 @@ export default function Home() {
           tldraw
         </span>
         <span className="rounded-md border border-ink/30 bg-paper px-2 py-0.5">
-          Claude
+          Groq Llama 4
         </span>
       </footer>
     </main>
