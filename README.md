@@ -9,7 +9,7 @@ Sketch with friends in real time, then ask Claude to:
 - 📐 **Text → Diagram** — type *"a microservices architecture with redis cache"* and watch shapes appear.
 - 📝 **Board → Notes** — summarize the entire board into structured meeting notes.
 
-Built with **Next.js 16**, **tldraw 5**, **`@tldraw/sync`**, and the **Anthropic Claude API**.
+Built with **Next.js 16**, **tldraw 5**, **`@tldraw/sync`**, and the **Groq API** (free, fast Llama 4 inference).
 
 ---
 
@@ -21,8 +21,8 @@ cd brainboard
 npm install
 
 cp .env.example .env.local
-# add your ANTHROPIC_API_KEY to .env.local
-# get one at https://console.anthropic.com/
+# add your GROQ_API_KEY to .env.local
+# get one FREE at https://console.groq.com/keys (no credit card)
 
 npm run dev
 # open http://localhost:3000
@@ -34,13 +34,13 @@ Click **create a board** on the landing page. Share the URL with anyone — they
 
 ## How the AI features work
 
-Each feature is a thin Next.js route handler around `@anthropic-ai/sdk`, using **Claude Sonnet 4.6** with **prompt caching** for the system prompts (the heavy part) so repeat requests are fast and cheap.
+Each feature is a thin Next.js route handler around `groq-sdk`. We use **Llama 4 Scout** (vision) for sketch-to-code and board-summarize, and **Llama 3.3 70B** (with JSON mode) for text-to-diagram. Groq's LPU inference is fast enough that prompt caching isn't needed.
 
-| Feature             | Input from canvas                          | Claude does                                                      | Output                                |
+| Feature             | Input from canvas                          | Model & job                                                      | Output                                |
 | ------------------- | ------------------------------------------ | ---------------------------------------------------------------- | ------------------------------------- |
-| **Sketch → Code**   | Selected shapes exported as PNG (base64)   | Vision: reconstruct the sketch as a working component            | `tsx` or `html` rendered in a panel   |
-| **Text → Diagram**  | A free-text prompt                         | Returns a JSON layout of `box`, `text`, and `arrow` primitives   | Real tldraw shapes drawn on your board |
-| **Board → Notes**   | Whole-page export as PNG (base64)          | Vision: extract topics, key points, action items, open questions | Markdown shown in the side panel      |
+| **Sketch → Code**   | Selected shapes exported as PNG (base64)   | Llama 4 Scout vision → reconstruct sketch as a working component | `tsx` or `html` rendered in a panel   |
+| **Text → Diagram**  | A free-text prompt                         | Llama 3.3 70B + JSON mode → `box`/`text`/`arrow` layout          | Real tldraw shapes drawn on your board |
+| **Board → Notes**   | Whole-page export as PNG (base64)          | Llama 4 Scout vision → topics, key points, action items          | Markdown shown in the side panel      |
 
 Routes:
 
@@ -70,7 +70,7 @@ brainboard/
 │   ├── Whiteboard.tsx            ← <Tldraw> + useSyncDemo, hosts AIPanel
 │   ├── RoomBadge.tsx             ← floating "← brainboard" + invite link
 │   └── AIPanel.tsx               ← three AI tabs, talks to /api routes
-├── src/lib/anthropic.ts          ← shared client + helpers (data-url parsing, fence extraction)
+├── src/lib/llm.ts                ← shared Groq client + model constants + fence extraction
 └── src/app/globals.css           ← playful tokens, wobble-border, sticky-card
 ```
 
@@ -87,7 +87,7 @@ We use **`useSyncDemo`** from `@tldraw/sync`, which connects to tldraw's hosted 
 - **Framework** — [Next.js 16](https://nextjs.org/) (App Router, Turbopack, async route params)
 - **Canvas** — [tldraw 5](https://tldraw.dev/) (infinite canvas, all the shape tools)
 - **Sync** — [`@tldraw/sync`](https://tldraw.dev/docs/sync) (`useSyncDemo` hook)
-- **AI** — [`@anthropic-ai/sdk`](https://github.com/anthropics/anthropic-sdk-typescript), Claude Sonnet 4.6 with vision + prompt caching
+- **AI** — [`groq-sdk`](https://github.com/groq/groq-typescript), Llama 4 Scout (vision) + Llama 3.3 70B (JSON), free tier
 - **Styling** — Tailwind CSS v4 with custom design tokens, hand-drawn fonts (Caveat + Patrick Hand)
 - **Misc** — `nanoid` for room IDs, `canvas-confetti` for the create-board moment
 
@@ -97,8 +97,8 @@ We use **`useSyncDemo`** from `@tldraw/sync`, which connects to tldraw's hosted 
 
 - **Next.js 16 gotchas**: `params` and `searchParams` are now `Promise`s — must `await`. `next/dynamic` with `ssr: false` is forbidden in server components, hence the `BoardClient` wrapper.
 - **tldraw v5 gotchas**: text shape props use `richText: toRichText("...")`, not bare strings. The `<Tldraw>` `store` and `persistenceKey` props are mutually exclusive.
-- **Prompt caching**: each route marks its system prompt with `cache_control: { type: "ephemeral" }` — Anthropic caches it for 5 minutes, so back-to-back requests pay only for the new image / user prompt.
-- **No API key?** The `/board/[roomId]` page works fine without `ANTHROPIC_API_KEY` — only the AI panel buttons will return an error.
+- **Free, fast inference**: Groq's LPU runs Llama 4 Scout at ~250 tok/s. The free tier is 30 req/min — plenty for personal use.
+- **No API key?** The `/board/[roomId]` page works fine without `GROQ_API_KEY` — only the AI panel buttons will return an error.
 
 ---
 

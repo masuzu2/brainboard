@@ -1,10 +1,5 @@
 import { NextResponse } from "next/server";
-import {
-  MODEL,
-  extractText,
-  getAnthropic,
-  parseDataUrl,
-} from "@/lib/anthropic";
+import { VISION_MODEL, getGroq } from "@/lib/llm";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -37,29 +32,22 @@ export async function POST(req: Request) {
     const { image } = (await req.json()) as { image: string };
     if (!image) return NextResponse.json({ error: "missing image" }, { status: 400 });
 
-    const { mediaType, base64 } = parseDataUrl(image);
-
-    const msg = await getAnthropic().messages.create({
-      model: MODEL,
+    const completion = await getGroq().chat.completions.create({
+      model: VISION_MODEL,
       max_tokens: 2048,
-      system: [
-        { type: "text", text: SYSTEM, cache_control: { type: "ephemeral" } },
-      ],
       messages: [
+        { role: "system", content: SYSTEM },
         {
           role: "user",
           content: [
-            {
-              type: "image",
-              source: { type: "base64", media_type: mediaType, data: base64 },
-            },
             { type: "text", text: "Summarize this whiteboard." },
+            { type: "image_url", image_url: { url: image } },
           ],
         },
       ],
     });
 
-    const notes = extractText(msg.content).trim();
+    const notes = (completion.choices[0]?.message?.content ?? "").trim();
     return NextResponse.json({ notes });
   } catch (err) {
     const message = err instanceof Error ? err.message : String(err);

@@ -1,11 +1,9 @@
 import { NextResponse } from "next/server";
 import {
-  MODEL,
+  VISION_MODEL,
   extractFencedBlock,
-  extractText,
-  getAnthropic,
-  parseDataUrl,
-} from "@/lib/anthropic";
+  getGroq,
+} from "@/lib/llm";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -41,34 +39,25 @@ export async function POST(req: Request) {
     };
     if (!image) return NextResponse.json({ error: "missing image" }, { status: 400 });
 
-    const { mediaType, base64 } = parseDataUrl(image);
     const system = framework === "html" ? SYSTEM_HTML : SYSTEM_REACT;
     const fenceLang = framework === "html" ? "html" : "tsx";
 
-    const msg = await getAnthropic().messages.create({
-      model: MODEL,
+    const completion = await getGroq().chat.completions.create({
+      model: VISION_MODEL,
       max_tokens: 4096,
-      system: [
-        { type: "text", text: system, cache_control: { type: "ephemeral" } },
-      ],
       messages: [
+        { role: "system", content: system },
         {
           role: "user",
           content: [
-            {
-              type: "image",
-              source: { type: "base64", media_type: mediaType, data: base64 },
-            },
-            {
-              type: "text",
-              text: "Reconstruct this sketch as production-ready code.",
-            },
+            { type: "text", text: "Reconstruct this sketch as production-ready code." },
+            { type: "image_url", image_url: { url: image } },
           ],
         },
       ],
     });
 
-    const text = extractText(msg.content);
+    const text = completion.choices[0]?.message?.content ?? "";
     const code = extractFencedBlock(text, fenceLang) ?? text.trim();
     return NextResponse.json({ code });
   } catch (err) {

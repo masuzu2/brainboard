@@ -1,17 +1,12 @@
 import { NextResponse } from "next/server";
-import {
-  MODEL,
-  extractFencedBlock,
-  extractText,
-  getAnthropic,
-} from "@/lib/anthropic";
+import { TEXT_MODEL, getGroq } from "@/lib/llm";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
 const SYSTEM = `You are a diagramming assistant. Given a description, produce a JSON layout of shapes that visualizes it on an infinite whiteboard.
 
-Output schema (strict):
+Output a JSON object with this exact schema:
 {
   "shapes": Array<
     | { "kind": "box", "x": number, "y": number, "w": number, "h": number, "label"?: string, "color"?: Color, "shape"?: "rectangle" | "ellipse" | "diamond" | "cloud" }
@@ -33,7 +28,7 @@ Rules:
 - Use 4-12 shapes max. Be selective.
 - Pick colors that group related concepts (e.g. all services blue, all data stores green).
 - Add a "text" shape at the top as a title when helpful.
-- Output ONLY a single \`\`\`json fenced block, no commentary.`;
+- Output ONLY a valid JSON object with the "shapes" key. No commentary, no markdown fences.`;
 
 export async function POST(req: Request) {
   try {
@@ -41,20 +36,20 @@ export async function POST(req: Request) {
     if (!prompt?.trim())
       return NextResponse.json({ error: "missing prompt" }, { status: 400 });
 
-    const msg = await getAnthropic().messages.create({
-      model: MODEL,
+    const completion = await getGroq().chat.completions.create({
+      model: TEXT_MODEL,
       max_tokens: 2048,
-      system: [
-        { type: "text", text: SYSTEM, cache_control: { type: "ephemeral" } },
+      response_format: { type: "json_object" },
+      messages: [
+        { role: "system", content: SYSTEM },
+        { role: "user", content: prompt },
       ],
-      messages: [{ role: "user", content: prompt }],
     });
 
-    const text = extractText(msg.content);
-    const json = extractFencedBlock(text, "json") ?? text.trim();
+    const text = completion.choices[0]?.message?.content ?? "{}";
     let parsed: unknown;
     try {
-      parsed = JSON.parse(json);
+      parsed = JSON.parse(text);
     } catch {
       return new NextResponse("AI returned invalid JSON", { status: 502 });
     }
