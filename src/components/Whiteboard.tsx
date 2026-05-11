@@ -3,7 +3,6 @@
 import { useState } from "react";
 import { Tldraw, type Editor } from "tldraw";
 import { useSyncDemo } from "@tldraw/sync";
-import "tldraw/tldraw.css";
 
 import AIPanel from "./AIPanel";
 import RoomBadge from "./RoomBadge";

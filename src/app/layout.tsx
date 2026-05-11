@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Caveat, Patrick_Hand, Inter } from "next/font/google";
 import "./globals.css";
+import "tldraw/tldraw.css";
 
 const caveat = Caveat({
   variable: "--font-caveat",
